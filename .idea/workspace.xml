@@ -4,16 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9ac49b67-8310-4c50-ab20-9da14475b729" name="Changes" comment="Initial code commit">
-      <change afterPath="$PROJECT_DIR$/bus.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/power_system.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/transformer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/transmission_line.py" afterDir="false" />
+    <list default="true" id="9ac49b67-8310-4c50-ab20-9da14475b729" name="Changes" comment="Update README.md and example from homework">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,7 +169,7 @@
       <workItem from="1707576347753" duration="2343000" />
       <workItem from="1707799828108" duration="16375000" />
       <workItem from="1708127265161" duration="56000" />
-      <workItem from="1708387707079" duration="38499000" />
+      <workItem from="1708387707079" duration="41398000" />
     </task>
     <task id="LOCAL-00001" summary="Initial code commit">
       <option name="closed" value="true" />
@@ -185,14 +179,43 @@
       <option name="project" value="LOCAL" />
       <updated>1707400458670</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Add milestone 1 files">
+      <option name="closed" value="true" />
+      <created>1709211394514</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1709211394514</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Update README.md and example from homework">
+      <option name="closed" value="true" />
+      <created>1709214234824</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1709214234824</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial code commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial code commit" />
+    <MESSAGE value="Add milestone 1 files" />
+    <MESSAGE value="Update README.md and example from homework" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update README.md and example from homework" />
   </component>
 </project>
