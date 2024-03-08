@@ -5,5 +5,6 @@ For milestone 1, ``main.py`` contains all initializations of each instance of th
 classes required for the project model. By running ``main.py``, 7 buses, 6 transmission lines,
 and 2 transformers are created.
 
-The ``main.py`` method will print the sample transformer and transmission line impedance and admittance
-(and total shunt for transmission line) from HW1.
+For milestone 2, ``main.py`` also creates an instance of the PowerSystem class, and calls
+its method to calculate the y-bus matrix. See the writeup in the writeups folder
+for more information.
