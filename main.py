@@ -3,6 +3,39 @@ from transmission_line import TransmissionLine
 from transmission_line import Conductor, ConductorBundle
 from bus import Bus
 from power_system import PowerSystem
+import numpy as np
+
+
+def print_example():
+    ####################
+    # Homework example #
+    ####################
+    hw_busA = Bus(voltage_base=20, bus_name="A")
+    hw_busB = Bus(voltage_base=500, bus_name="B")
+    finch_conductor = Conductor(gmr=0.0435, r_per_mile=0.0969, out_diameter=1.293)
+    finch_bundle = ConductorBundle(conductor=finch_conductor, num_conductors=3, conductor_distance=1)
+    hw_xfmr = Transformer(rating=500, bus_a=hw_busA, bus_b=hw_busB, z_pu=0.075, x_r_ratio=13)
+    hw_tl = TransmissionLine(conductor_bundle=finch_bundle, distances=[12.5, 12.5, 20],
+                             length=100, bus_a=hw_busB, bus_b=hw_busB)
+    print("###########\nSAMPLE OUTPUT (from Homework)\n###########\n")
+    print("HW XFMR Impedance PU: " + str(hw_xfmr.z_pu_sys))
+    print("HW XFMR Admittance PU: " + str(hw_xfmr.yt_pu) + "\n")
+
+    print("HW TL Impedance PU: " + str(hw_tl.z))
+    print("HW TL Susceptance PU: " + str(hw_tl.b))
+    print("HW TL Admittance PU: " + str(hw_tl.ytl_pu))
+
+
+def print_y_bus(power_system: PowerSystem, decimals=2):
+    rounded_y_bus = np.around(power_system.y_bus, decimals=decimals)
+    length_check = np.vectorize(len)
+    max_length = np.amax(length_check(rounded_y_bus.astype(dtype=str))) + 1
+    for row in range(len(rounded_y_bus)):
+        cur_row = ""
+        for col in range(len(power_system.y_bus)):
+            cur_row += (" " * (max_length - len(str(rounded_y_bus[row,col])))) + (str(rounded_y_bus[row,col]))
+        print(cur_row)
+
 
 if __name__ == '__main__':
     # Initialize Power System instance
@@ -53,22 +86,4 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl5)
     ps.add_transmission_line(tl6)
     ps.calculate_y_bus()
-
-    ####################
-    # Homework example #
-    ####################
-    hw_busA = Bus(voltage_base=20, bus_name="A")
-    hw_busB = Bus(voltage_base=500, bus_name="B")
-    finch_conductor = Conductor(gmr=0.0435, r_per_mile=0.0969, out_diameter=1.293)
-    finch_bundle = ConductorBundle(conductor=finch_conductor, num_conductors=3, conductor_distance=1)
-    hw_xfmr = Transformer(rating=500, bus_a=hw_busA, bus_b=hw_busB, z_pu=0.075, x_r_ratio=13)
-    hw_tl = TransmissionLine(conductor_bundle=finch_bundle, distances=[12.5, 12.5, 20],
-                             length=100, bus_a=hw_busB, bus_b=hw_busB)
-    print("###########\nSAMPLE OUTPUT (from Homework)\n###########\n")
-    print("HW XFMR Impedance PU: " + str(hw_xfmr.z_pu_sys))
-    print("HW XFMR Admittance PU: " + str(hw_xfmr.yt_pu) + "\n")
-
-    print("HW TL Impedance PU: " + str(hw_tl.z))
-    print("HW TL Susceptance PU: " + str(hw_tl.b))
-    print("HW TL Admittance PU: " + str(hw_tl.ytl_pu))
-
+    #print_y_bus(ps,decimals=3)

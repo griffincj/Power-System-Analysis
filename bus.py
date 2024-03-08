@@ -8,7 +8,7 @@ class Bus:
     num_buses = 0
 
     def __init__(self, voltage_base, bus_name):
-        self.id = self.num_buses - 1
+        self.id = self.num_buses
         self.voltage_base = voltage_base
         self.bus_name = bus_name
         self.voltage = 0

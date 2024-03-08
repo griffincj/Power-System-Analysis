@@ -29,12 +29,13 @@ class PowerSystem():
         # This is currently in a "dangerous" state that assumes all element types have attribute named
         # "bus_a" and "bus_b".
         # TODO: refactor to use inheritance for guaranteed consistency
-        for element in (self.transformers + self.transmission_lines):
+        elements = list(self.transformers + self.transmission_lines)
+        for element in elements:
             a = element.bus_a
             b = element.bus_b
             sub_bus = element.sub_bus
-            self.y_bus[a.id, a.id] = sub_bus[0, 0]
-            self.y_bus[a.id, b.id] = sub_bus[0, 1]
-            self.y_bus[b.id, a.id] = sub_bus[1, 0]
-            self.y_bus[b.id, b.id] = sub_bus[1, 1]
+            self.y_bus[a.id, a.id] += sub_bus[0, 0]
+            self.y_bus[a.id, b.id] += sub_bus[0, 1]
+            self.y_bus[b.id, a.id] += sub_bus[1, 0]
+            self.y_bus[b.id, b.id] += sub_bus[1, 1]
         return self.y_bus

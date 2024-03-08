@@ -98,15 +98,13 @@ class TransmissionLine:
         sub_bus = np.zeros(shape=(2, 2), dtype=np.complex_)
         iterator = np.nditer(sub_bus, flags=['multi_index'])
 
-        # Shunt susceptance must be split in half, representing each side of the line
-        per_side_b = (self.b / 2)
         while not iterator.finished:
             if iterator.multi_index[0] == iterator.multi_index[1]:
                 # Diagonal elements -> sum of shunt susceptance (complex) and admittance
-                sub_bus[iterator.multi_index] = self.ytl_pu + per_side_b
+                # Shunt susceptance must be split in half, representing each side of the line
+                sub_bus[iterator.multi_index] = self.ytl_pu + (self.b / 2)
             else:
                 # Off-diagonal elements -> negative, don't include shunt susceptance
                 sub_bus[iterator.multi_index] = -1 * self.ytl_pu
             iterator.iternext()
-        #print("Transmission Line " + str(self.bus_a.bus_name) + " " + str(self.bus_b.bus_name) + "\n" + str(sub_bus))
         return sub_bus
