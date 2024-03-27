@@ -46,7 +46,7 @@ class TransmissionLine:
     """
     Transmission line composed of one or more conductor bundles for specified length
     """
-    PERMITTIVITY = 8.854 * 10 ** (-12)
+    PERMITTIVITY = 8.854 * (10 ** (-12))
 
     def __init__(self, conductor_bundle, length, distances, bus_a: Bus, bus_b: Bus, num_bundles=3):
         if len(distances) != num_bundles:
@@ -58,6 +58,7 @@ class TransmissionLine:
         self.bus_a = bus_a
         self.bus_b = bus_b
         self.voltage = bus_a.voltage_base
+        #print(str(bus_a.bus_name) + ' ' + str(bus_b.bus_name) + ' ' + str(self.voltage))
         self.z_base = (self.voltage ** 2) / config.power_base
 
         self.deq = self.calc_deq()
@@ -72,7 +73,7 @@ class TransmissionLine:
         return np.prod(self.distances) ** (1 / self.num_bundles)
 
     def calc_impedance(self):
-        return self.r + self.x * 1j
+        return self.r + (self.x * 1j)
 
     def calc_resistance(self):
         per_phase_r = self.conductor_bundle.conductor.r_per_mile / self.num_bundles
@@ -80,8 +81,7 @@ class TransmissionLine:
         return total_r / self.z_base
 
     def calc_reactance(self):
-        log_term = np.log(self.deq / self.conductor_bundle.dsl)
-        per_mile_x = 377.1609 * (2 * 10 ** -7) * log_term * 1609
+        per_mile_x = 377 * 1609 * (2 * 10 ** -7) * np.log(self.deq / self.conductor_bundle.dsl)
         total_x = per_mile_x * self.length
         return total_x / self.z_base
 

@@ -7,4 +7,5 @@ class Config:
     def power_base(self):
         return self._power_base
 
+
 config = Config()

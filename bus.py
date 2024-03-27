@@ -1,7 +1,4 @@
-import cmath
-import numpy as np
-from config import config
-import itertools
+from enum import Enum
 
 
 class Bus:
@@ -11,9 +8,11 @@ class Bus:
         self.id = self.num_buses
         self.voltage_base = voltage_base
         self.bus_name = bus_name
-        self.voltage = 0
-        self.angle = 0
-        self.power = 0
+        self.voltage = 1.0
+        self.angle = 0.0
+        self.power = 0.0
+        self.reactive_power = 0.0
+        self.type = "SLACK"
         Bus.num_buses += 1
 
 if __name__ == '__main__':

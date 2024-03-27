@@ -8,3 +8,5 @@ and 2 transformers are created.
 For milestone 2, ``main.py`` also creates an instance of the PowerSystem class, and calls
 its method to calculate the y-bus matrix. See the writeup in the writeups folder
 for more information.
+
+For milestone 3,
