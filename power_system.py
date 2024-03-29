@@ -72,10 +72,11 @@ class PowerSystem():
         """
         # Remove slack bus from buses in Jacobian
         jacobian_buses = [bus for bus in self.buses.copy() if bus.type != "SLACK"]
+        # Determine number of PV and non-PV buses, as well as the number of buses in the Jacobian (i.e. minus slack)
+        # Num Jacobian buses does include PV buses, since they do appear in some of the quadrants
         non_pv_buses = [bus for bus in jacobian_buses.copy() if bus.type != "PV"]
-
-        num_jac_buses = len(jacobian_buses)
         num_PV_buses = len([bus for bus in self.buses if bus.type == "PV"])
+        num_jac_buses = len(jacobian_buses)
 
         # Initialize each quadrant of Jacobian to be appropriate size, filled with 0s
         self.j1 = pd.DataFrame(data=np.zeros(shape=(num_jac_buses, num_jac_buses)),

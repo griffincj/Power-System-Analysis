@@ -8,5 +8,5 @@ class Generator:
         self.bus = connected_bus
         connected_bus.type = "PV"
 
-        connected_bus.power = self.power
+        connected_bus.power += self.power
         connected_bus.voltage = self.voltage
