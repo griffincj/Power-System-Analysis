@@ -21,9 +21,6 @@ class PowerSystem():
         self.j4 = pd.DataFrame((1, 1))
         self.tolerance = 0.0001
 
-    def solve(self):
-        return "Power System Solved"
-
     def add_bus(self, bus: Bus):
         self.buses.append(bus)
 
@@ -42,13 +39,14 @@ class PowerSystem():
 
         for n in self.buses:
             real_power += (self.y_magnitude.loc[cur_bus.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
-                          * np.cos(
+                           * np.cos(
                         bus_dict[cur_bus.bus_name].angle - bus_dict[n.bus_name].angle - self.y_theta.loc[
                             cur_bus.bus_name, n.bus_name]))
 
         real_power *= cur_bus.voltage
         cur_bus.power = real_power
         return
+
     def calc_reactive_power(self, cur_bus: Bus):
         reactive_power = 0
 
@@ -58,13 +56,19 @@ class PowerSystem():
 
         for n in self.buses:
             reactive_power += (self.y_magnitude.loc[cur_bus.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
-                           * np.sin(
+                               * np.sin(
                         bus_dict[cur_bus.bus_name].angle - bus_dict[n.bus_name].angle - self.y_theta.loc[
                             cur_bus.bus_name, n.bus_name]))
 
         reactive_power *= cur_bus.voltage
-        cur_bus.power = reactive_power
+        cur_bus.reactive_power = reactive_power
         return
+
+    def calc_power_loss(self):
+        power_loss = 0
+        for i_bus in self.buses:
+            power_loss += i_bus.power
+        return power_loss
 
     def calculate_y_bus(self):
         num_buses = len(self.buses)
@@ -236,6 +240,7 @@ class PowerSystem():
                     # Off-diagonals
                     self.j4.loc[k, n] = (bus_dict[k].voltage * self.y_magnitude.loc[k, n] *
                                          np.sin(bus_dict[k].angle - bus_dict[n].angle - self.y_theta.loc[k, n]))
+
     def print_jacobians(self):
         print('\nQUADRANT 1 JACOBIAN')
         print(self.j1)
@@ -329,9 +334,6 @@ class PowerSystem():
                 else:
                     x_full[i][0] = delta_x[d_x_i][0]
                     d_x_i += 1
-
-            #print('\nPER UNIT DELTA X: ' + str(delta_x.shape))
-            #print(np.around(delta_x, decimals=4))
 
             # Update angles and voltages on each bus if not SLACK or PV
             for i in range(int(x_full.shape[0] / 2)):

@@ -104,3 +104,4 @@ if __name__ == '__main__':
 
     ps.calculate_y_bus()
     ps.run_newton_raphson(10)
+    print("P.U. POWER LOSS: " + str(ps.calc_power_loss()))
