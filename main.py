@@ -103,4 +103,4 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl6)
 
     ps.calculate_y_bus()
-    ps.run_newton_raphson(1)
+    ps.run_newton_raphson(10)

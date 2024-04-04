@@ -19,6 +19,7 @@ class PowerSystem():
         self.j2 = pd.DataFrame((1, 1))
         self.j3 = pd.DataFrame((1, 1))
         self.j4 = pd.DataFrame((1, 1))
+        self.tolerance = 0.0001
 
     def solve(self):
         return "Power System Solved"
@@ -31,6 +32,39 @@ class PowerSystem():
 
     def add_transformer(self, transformer: Transformer):
         self.transformers.append(transformer)
+
+    def calc_real_power(self, cur_bus: Bus):
+        real_power = 0
+
+        bus_dict = {}
+        for bus in self.buses:
+            bus_dict[bus.bus_name] = bus
+
+        for n in self.buses:
+            real_power += (self.y_magnitude.loc[cur_bus.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
+                          * np.cos(
+                        bus_dict[cur_bus.bus_name].angle - bus_dict[n.bus_name].angle - self.y_theta.loc[
+                            cur_bus.bus_name, n.bus_name]))
+
+        real_power *= cur_bus.voltage
+        cur_bus.power = real_power
+        return
+    def calc_reactive_power(self, cur_bus: Bus):
+        reactive_power = 0
+
+        bus_dict = {}
+        for bus in self.buses:
+            bus_dict[bus.bus_name] = bus
+
+        for n in self.buses:
+            reactive_power += (self.y_magnitude.loc[cur_bus.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
+                           * np.sin(
+                        bus_dict[cur_bus.bus_name].angle - bus_dict[n.bus_name].angle - self.y_theta.loc[
+                            cur_bus.bus_name, n.bus_name]))
+
+        reactive_power *= cur_bus.voltage
+        cur_bus.power = reactive_power
+        return
 
     def calculate_y_bus(self):
         num_buses = len(self.buses)
@@ -202,6 +236,15 @@ class PowerSystem():
                     # Off-diagonals
                     self.j4.loc[k, n] = (bus_dict[k].voltage * self.y_magnitude.loc[k, n] *
                                          np.sin(bus_dict[k].angle - bus_dict[n].angle - self.y_theta.loc[k, n]))
+    def print_jacobians(self):
+        print('\nQUADRANT 1 JACOBIAN')
+        print(self.j1)
+        print('\nQUADRANT 2 JACOBIAN')
+        print(self.j2)
+        print('\nQUADRANT 3 JACOBIAN')
+        print(self.j3)
+        print('\nQUADRANT 4 JACOBIAN')
+        print(self.j4)
 
     def run_newton_raphson(self, iterations):
         print('Running Newton-Raphson...')
@@ -231,17 +274,9 @@ class PowerSystem():
         # Perform iterations of algorithm
         for iteration in range(0, iterations):
             self.calc_jacobian_quad_1()
-            print('\nQUADRANT 1 JACOBIAN')
-            print(self.j1)
             self.calc_jacobian_quad_2()
-            print('\nQUADRANT 2 JACOBIAN')
-            print(self.j2)
             self.calc_jacobian_quad_3()
-            print('\nQUADRANT 3 JACOBIAN')
-            print(self.j3)
             self.calc_jacobian_quad_4()
-            print('\nQUADRANT 4 JACOBIAN')
-            print(self.j4)
 
             # Concat partial Jacobians to form full, 4-quadrant Jacobian
             j1_j2 = pd.concat([self.j1, self.j2], axis=1, ignore_index=True)
@@ -262,7 +297,7 @@ class PowerSystem():
                     continue
                 for n in self.buses:
                     reactive_i += (self.y_magnitude.loc[k.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
-                                     * np.sin(
+                                   * np.sin(
                                 bus_dict[k.bus_name].angle - bus_dict[n.bus_name].angle - self.y_theta.loc[
                                     k.bus_name, n.bus_name]))
                     power_sum += (self.y_magnitude.loc[k.bus_name, n.bus_name] * bus_dict[n.bus_name].voltage
@@ -281,9 +316,6 @@ class PowerSystem():
                     x_full[int(k.bus_name) - 1 + len(self.buses)][0] = float('-inf')
                     y_ang_loc += 1
 
-            print('\nPOWER MISMATCH: ' + str(delta_y.shape))
-            print(delta_y)
-
             # Calculate inverse to find delta_x vector, used to update angles and voltages
             inverse_jacobian = np.linalg.inv(pd.DataFrame.to_numpy(full_jacobian))
             delta_x = np.matmul(inverse_jacobian, delta_y)
@@ -297,13 +329,31 @@ class PowerSystem():
                 else:
                     x_full[i][0] = delta_x[d_x_i][0]
                     d_x_i += 1
-            print('\nDELTA X: ' + str(delta_x.shape))
-            print(delta_x)
+
+            #print('\nPER UNIT DELTA X: ' + str(delta_x.shape))
+            #print(np.around(delta_x, decimals=4))
+
             # Update angles and voltages on each bus if not SLACK or PV
-            for i in range(int(x_full.shape[0]/2)):
+            for i in range(int(x_full.shape[0] / 2)):
                 angle_update = x_full[i]
-                mag_update = x_full[i+len(self.buses)]
-                if angle_update != float('inf'):
+                mag_update = x_full[i + len(self.buses)]
+                if angle_update != float('-inf'):
                     self.buses[i].angle += angle_update
-                if mag_update != float('inf'):
+                if mag_update != float('-inf'):
                     self.buses[i].voltage += mag_update
+
+            if (np.abs(delta_y) <= self.tolerance).all():
+                print("CONVERGED IN " + str(iteration) + " ITERATIONS")
+                break
+
+        for bus in self.buses:
+            if bus.type == 'SLACK':
+                self.calc_reactive_power(bus)
+                self.calc_real_power(bus)
+            if bus.type == 'PV':
+                self.calc_reactive_power(bus)
+            print("BUS " + str(bus.bus_name))
+            print("P.U. POWER " + str(bus.power))
+            print("P.U. REACTIVE POWER " + str(bus.reactive_power))
+            print("P.U. VOLTAGE MAGNITUDE " + str(bus.voltage))
+            print("P.U. VOLTAGE ANGLE " + str(bus.angle) + "\n")
