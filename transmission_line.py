@@ -8,10 +8,11 @@ class Conductor:
     """
     Specification for a conductor
     """
-    def __init__(self, gmr, r_per_mile, out_diameter):
+    def __init__(self, gmr, r_per_mile, out_diameter, ampacity):
         self.gmr = gmr
         self.r_per_mile = r_per_mile
         self.out_radius = (out_diameter / 2) * 1 / 12
+        self.ampacity = ampacity
 
 
 class ConductorBundle:
@@ -58,7 +59,6 @@ class TransmissionLine:
         self.bus_a = bus_a
         self.bus_b = bus_b
         self.voltage = bus_a.voltage_base
-        #print(str(bus_a.bus_name) + ' ' + str(bus_b.bus_name) + ' ' + str(self.voltage))
         self.z_base = (self.voltage ** 2) / config.power_base
 
         self.deq = self.calc_deq()

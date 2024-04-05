@@ -1,6 +1,9 @@
+import math
+
 import numpy as np
 import pandas as pd
 import cmath as cm
+from config import config
 
 from transformer import Transformer
 from transmission_line import TransmissionLine
@@ -19,7 +22,6 @@ class PowerSystem():
         self.j2 = pd.DataFrame((1, 1))
         self.j3 = pd.DataFrame((1, 1))
         self.j4 = pd.DataFrame((1, 1))
-        self.tolerance = 0.0001
 
     def add_bus(self, bus: Bus):
         self.buses.append(bus)
@@ -69,6 +71,31 @@ class PowerSystem():
         for i_bus in self.buses:
             power_loss += i_bus.power
         return power_loss
+
+    def calc_reactive_loss(self):
+        reactive_loss = 0
+        for i_bus in self.buses:
+            reactive_loss += i_bus.reactive_power
+        return reactive_loss
+
+    def calc_ampacity_excpetions(self):
+        # I believe something is wrong here. In class, we discussed
+        # current calculation to be |(v1-v2)/z_series|.
+        # I might be making a mistake in the conversion back to nominal, or maybe I'm doing
+        # the above calculation incorrectly in this function
+        print("\nCalculating ampacity exceptions...")
+        for t_line in self.transmission_lines:
+            bus_a_v = t_line.bus_a.voltage
+            bus_b_v = t_line.bus_b.voltage
+            print("Bus " + str(t_line.bus_a.bus_name) + " to Bus " + str(t_line.bus_b.bus_name))
+            pu_current = abs((bus_a_v - bus_b_v)/t_line.sub_bus[0,0])
+            current_amps = pu_current * 1000 * t_line.bus_a.voltage_base
+            print("CURRENT IN AMPS: " + str(current_amps))
+            if current_amps > t_line.conductor_bundle.conductor.ampacity:
+                print("AMPACITY EXCEEDED\n")
+            else:
+                print("Ampacity not exceeded\n")
+
 
     def calculate_y_bus(self):
         num_buses = len(self.buses)
@@ -251,7 +278,7 @@ class PowerSystem():
         print('\nQUADRANT 4 JACOBIAN')
         print(self.j4)
 
-    def run_newton_raphson(self, iterations):
+    def run_newton_raphson(self, iterations: int, tolerance: float):
         print('Running Newton-Raphson...')
         self.init_jacobian()
 
@@ -344,9 +371,12 @@ class PowerSystem():
                 if mag_update != float('-inf'):
                     self.buses[i].voltage += mag_update
 
-            if (np.abs(delta_y) <= self.tolerance).all():
-                print("CONVERGED IN " + str(iteration) + " ITERATIONS")
+            if (np.abs(delta_y) <= tolerance).all():
+                print("CONVERGED IN " + str(iteration+1) + " ITERATIONS\n")
                 break
+            elif iteration == (iterations - 1):
+                print("DID NOT CONVERGE IN " + str(iterations) + " ITERATIONS\n")
+                return
 
         for bus in self.buses:
             if bus.type == 'SLACK':
@@ -354,8 +384,5 @@ class PowerSystem():
                 self.calc_real_power(bus)
             if bus.type == 'PV':
                 self.calc_reactive_power(bus)
-            print("BUS " + str(bus.bus_name))
-            print("P.U. POWER " + str(bus.power))
-            print("P.U. REACTIVE POWER " + str(bus.reactive_power))
-            print("P.U. VOLTAGE MAGNITUDE " + str(bus.voltage))
-            print("P.U. VOLTAGE ANGLE " + str(bus.angle) + "\n")
+            print(bus)
+

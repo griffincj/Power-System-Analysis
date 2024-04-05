@@ -80,7 +80,7 @@ if __name__ == '__main__':
     ps.add_transformer(t2)
 
     # Initialize base conductor and bundle, used by each transmission line
-    partridge_conductor = Conductor(gmr=0.0217, r_per_mile=0.385, out_diameter=0.642)
+    partridge_conductor = Conductor(gmr=0.0217, r_per_mile=0.385, out_diameter=0.642, ampacity=430)
 
     # Initialize bundle, composed of given conductor type
     bundle = ConductorBundle(conductor=partridge_conductor, num_conductors=2, conductor_distance=1.5)
@@ -103,5 +103,8 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl6)
 
     ps.calculate_y_bus()
-    ps.run_newton_raphson(10)
-    print("P.U. POWER LOSS: " + str(ps.calc_power_loss()))
+    ps.run_newton_raphson(iterations=5, tolerance=0.0001)
+    print("POWER LOSS (PU): " + str(ps.calc_power_loss()))
+    print("REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
+
+    ps.calc_ampacity_excpetions()

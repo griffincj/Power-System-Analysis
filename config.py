@@ -6,6 +6,9 @@ class Config:
     @property
     def power_base(self):
         return self._power_base
+    @property
+    def voltage_base(self):
+        return self._voltage_base
 
 
 config = Config()

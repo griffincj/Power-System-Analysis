@@ -15,6 +15,11 @@ class Bus:
         self.type = "SLACK"
         Bus.num_buses += 1
 
+    def __str__(self):
+        return (f"Bus # {self.bus_name} \nVOLTAGE PU {self.voltage}\n"
+                f"VOLTAGE ANGLE {self.angle}\nREAL POWER PU {self.power}\n"
+                f"REACTIVE POWER PU {self.reactive_power}\n")
+
 if __name__ == '__main__':
     bus_1 = Bus(voltage_base=20, bus_name="1")
     bus_2 = Bus(voltage_base=230, bus_name="2")
