@@ -107,4 +107,4 @@ if __name__ == '__main__':
     print("POWER LOSS (PU): " + str(ps.calc_power_loss()))
     print("REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
 
-    ps.calc_ampacity_excpetions()
+    ps.calc_ampacity_exceptions()

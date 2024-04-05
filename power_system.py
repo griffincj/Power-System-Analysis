@@ -78,7 +78,7 @@ class PowerSystem():
             reactive_loss += i_bus.reactive_power
         return reactive_loss
 
-    def calc_ampacity_excpetions(self):
+    def calc_ampacity_exceptions(self):
         # I believe something is wrong here. In class, we discussed
         # current calculation to be |(v1-v2)/z_series|.
         # I might be making a mistake in the conversion back to nominal, or maybe I'm doing
