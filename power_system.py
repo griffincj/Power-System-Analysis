@@ -1,3 +1,4 @@
+import cmath
 import math
 
 import numpy as np
@@ -79,16 +80,17 @@ class PowerSystem():
         return reactive_loss
 
     def calc_ampacity_exceptions(self):
-        # I believe something is wrong here. In class, we discussed
-        # current calculation to be |(v1-v2)/z_series|.
+        # I believe something might be wrong here. In class, we discussed
+        # current calculation to be |(va-vb)/z_series| where v1 and v2 are the rectangular voltages with mag and ang
         # I might be making a mistake in the conversion back to nominal, or maybe I'm doing
         # the above calculation incorrectly in this function
         print("\nCalculating ampacity exceptions...")
         for t_line in self.transmission_lines:
-            bus_a_v = t_line.bus_a.voltage
-            bus_b_v = t_line.bus_b.voltage
+            # Convert angle magnitude and angle to rectangular/complex form
+            va = cmath.rect(t_line.bus_a.voltage, t_line.bus_a.angle)
+            vb = cmath.rect(t_line.bus_b.voltage, t_line.bus_b.angle)
             print("Bus " + str(t_line.bus_a.bus_name) + " to Bus " + str(t_line.bus_b.bus_name))
-            pu_current = abs((bus_a_v - bus_b_v)/t_line.sub_bus[0,0])
+            pu_current = abs((va - vb)/t_line.sub_bus[0,0])
             current_amps = pu_current * 1000 * t_line.bus_a.voltage_base
             print("CURRENT IN AMPS: " + str(current_amps))
             if current_amps > t_line.conductor_bundle.conductor.ampacity:
