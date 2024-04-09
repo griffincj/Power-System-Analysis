@@ -90,8 +90,10 @@ class PowerSystem():
             va = cmath.rect(t_line.bus_a.voltage, t_line.bus_a.angle)
             vb = cmath.rect(t_line.bus_b.voltage, t_line.bus_b.angle)
             print("Bus " + str(t_line.bus_a.bus_name) + " to Bus " + str(t_line.bus_b.bus_name))
-            pu_current = abs((va - vb)/t_line.sub_bus[0,0])
-            current_amps = pu_current * 1000 * t_line.bus_a.voltage_base
+            pu_current = abs((va - vb) * t_line.sub_bus[1,0])
+            unit_factor = (config.power_base/(math.sqrt(3) * t_line.bus_a.voltage_base)) * 1000
+            current_amps = pu_current * unit_factor
+
             print("CURRENT IN AMPS: " + str(current_amps))
             if current_amps > t_line.conductor_bundle.conductor.ampacity:
                 print("AMPACITY EXCEEDED\n")

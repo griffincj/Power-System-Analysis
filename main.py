@@ -102,9 +102,18 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl5)
     ps.add_transmission_line(tl6)
 
-    ps.calculate_y_bus()
-    ps.run_newton_raphson(iterations=5, tolerance=0.0001)
-    print("POWER LOSS (PU): " + str(ps.calc_power_loss()))
-    print("REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
-
-    ps.calc_ampacity_exceptions()
+    user_input = input("Please select either FAULT or FLOW:")
+    if user_input.upper() == "FAULT":
+        print("You selected FAULT")
+        bus_list = [bus.bus_name for bus in ps.buses]
+        print('Buses: ' + str(bus_list))
+        user_bus_select = input(f"Please enter a bus in range ")
+        while user_bus_select not in bus_list:
+            user_bus_select = input(f"Please enter a bus in range ")
+        ps.calculate_y_bus()
+    elif user_input.upper() == "FLOW":
+        ps.calculate_y_bus()
+        ps.run_newton_raphson(iterations=5, tolerance=0.0001)
+        print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
+        print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
+        ps.calc_ampacity_exceptions()
