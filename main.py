@@ -71,7 +71,9 @@ if __name__ == '__main__':
     load_4 = Load(pu_power=(100 / config.power_base), pu_reactive_power=(70 / config.power_base), connected_bus=bus_4)
     load_5 = Load(pu_power=(100 / config.power_base), pu_reactive_power=(65 / config.power_base), connected_bus=bus_5)
     load_6 = Load(pu_power=(0 / config.power_base), pu_reactive_power=(0 / config.power_base), connected_bus=bus_6)
-    gen_7 = Generator(pu_power=(200 / config.power_base), pu_voltage=1.0, connected_bus=bus_7)
+    gen_7 = Generator(pu_power=(200 / config.power_base), pu_voltage=1.0, connected_bus=bus_7, pos_seq_x=0.12)
+
+    gen_slack = Generator(pu_power=(0/config.power_base), pu_voltage=1.0, connected_bus=bus_1, pos_seq_x=0.12)
 
     # Transformer low-side, high-side is based on the buses connected on either side of it
     t1 = Transformer(rating=125, bus_a=bus_1, bus_b=bus_2, z_pu=0.085, x_r_ratio=10)
@@ -102,16 +104,22 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl5)
     ps.add_transmission_line(tl6)
 
-    user_input = input("Please select either FAULT or FLOW:")
-    if user_input.upper() == "FAULT":
+    for bus in ps.buses:
+        print(bus.type)
+
+
+    user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
+    if int(user_input) == 1:
         print("You selected FAULT")
         bus_list = [bus.bus_name for bus in ps.buses]
         print('Buses: ' + str(bus_list))
+
         user_bus_select = input(f"Please enter a bus in range ")
         while user_bus_select not in bus_list:
             user_bus_select = input(f"Please enter a bus in range ")
+
         ps.calculate_y_bus()
-    elif user_input.upper() == "FLOW":
+    elif int(user_input) == 2:
         ps.calculate_y_bus()
         ps.run_newton_raphson(iterations=5, tolerance=0.0001)
         print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))

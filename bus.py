@@ -12,7 +12,7 @@ class Bus:
         self.angle = 0.0
         self.power = 0.0
         self.reactive_power = 0.0
-        self.type = "SLACK"
+        self.type = "PQ"
         Bus.num_buses += 1
 
     def __str__(self):
