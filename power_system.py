@@ -1,4 +1,5 @@
 import cmath
+import copy
 import math
 
 import numpy as np
@@ -9,14 +10,19 @@ from config import config
 from transformer import Transformer
 from transmission_line import TransmissionLine
 from bus import Bus
+from generator import Generator
+import warnings
 
+warnings.filterwarnings("ignore")
 
 class PowerSystem():
     def __init__(self):
+        self.generators = []
         self.transformers = []
         self.transmission_lines = []
         self.buses = []
         self.y_bus = np.zeros((1, 1))
+        self.z_bus = np.zeros((1, 1))
         self.y_magnitude = pd.DataFrame()
         self.y_theta = pd.DataFrame()
         self.j1 = pd.DataFrame((1, 1))
@@ -26,6 +32,9 @@ class PowerSystem():
 
     def add_bus(self, bus: Bus):
         self.buses.append(bus)
+
+    def add_generator(self, generator: Generator):
+        self.generators.append(generator)
 
     def add_transmission_line(self, line: TransmissionLine):
         self.transmission_lines.append(line)
@@ -132,7 +141,36 @@ class PowerSystem():
                 polar = cm.polar(self.y_bus[row][col])
                 self.y_magnitude.loc[str(row + 1), str(col + 1)] = polar[0]
                 self.y_theta.loc[str(row + 1), str(col + 1)] = polar[1]
+
         return self.y_bus
+
+    def calc_z_bus(self):
+        self.calculate_y_bus()
+        # Add the positive sequence reactance for each generator
+        for gen in self.generators:
+            bus_id = gen.bus.id
+            self.y_bus[bus_id, bus_id] += (1/gen.pos_seq_x * 1j)
+        # Z_bus is the inverse of the updated Y_bus
+        self.z_bus = np.linalg.inv(self.y_bus)
+
+    def calc_fault(self, selected_bus, pre_fault_v):
+        # Convert selected bus from bus name to bus ID
+        bus_dict = {}
+        for bus in self.buses:
+            bus_dict[bus.bus_name] = bus
+        cur_bus = bus_dict[selected_bus]
+
+        prefaut_v_complex = cmath.rect(pre_fault_v, 0)
+        # Current vector should be all zeros except for the faulted bus,
+        # which should be -pre_fault_v / Z_bus[k,k]
+        i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
+        i_fault = prefaut_v_complex/(self.z_bus[cur_bus.id, cur_bus.id])
+        i_vector[cur_bus.id] = -i_fault
+
+        fault_v_vector = np.matmul(self.z_bus, i_vector)
+        for i in range(fault_v_vector.shape[0]):
+            fault_v_vector[i] = pre_fault_v - cmath.polar(fault_v_vector[i])[0]
+        return np.real(i_fault), fault_v_vector.astype(float)
 
     def init_jacobian(self):
         """

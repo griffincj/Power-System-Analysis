@@ -72,7 +72,6 @@ if __name__ == '__main__':
     load_5 = Load(pu_power=(100 / config.power_base), pu_reactive_power=(65 / config.power_base), connected_bus=bus_5)
     load_6 = Load(pu_power=(0 / config.power_base), pu_reactive_power=(0 / config.power_base), connected_bus=bus_6)
     gen_7 = Generator(pu_power=(200 / config.power_base), pu_voltage=1.0, connected_bus=bus_7, pos_seq_x=0.12)
-
     gen_slack = Generator(pu_power=(0/config.power_base), pu_voltage=1.0, connected_bus=bus_1, pos_seq_x=0.12)
 
     # Transformer low-side, high-side is based on the buses connected on either side of it
@@ -104,9 +103,8 @@ if __name__ == '__main__':
     ps.add_transmission_line(tl5)
     ps.add_transmission_line(tl6)
 
-    for bus in ps.buses:
-        print(bus.type)
-
+    ps.add_generator(gen_slack)
+    ps.add_generator(gen_7)
 
     user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
     if int(user_input) == 1:
@@ -117,10 +115,14 @@ if __name__ == '__main__':
         user_bus_select = input(f"Please enter a bus in range ")
         while user_bus_select not in bus_list:
             user_bus_select = input(f"Please enter a bus in range ")
-
-        ps.calculate_y_bus()
+        ps.calc_z_bus()
+        i_fault, v_fault_vector = ps.calc_fault(user_bus_select, 1.05)
+        print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
+        print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
     elif int(user_input) == 2:
         ps.calculate_y_bus()
+        print(ps.y_bus)
+        print(ps.z_bus)
         ps.run_newton_raphson(iterations=5, tolerance=0.0001)
         print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
         print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
