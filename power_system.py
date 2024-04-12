@@ -160,7 +160,9 @@ class PowerSystem():
             bus_dict[bus.bus_name] = bus
         cur_bus = bus_dict[selected_bus]
 
+        # We want to use the voltage phasor for calculations
         prefaut_v_complex = cmath.rect(pre_fault_v, 0)
+
         # Current vector should be all zeros except for the faulted bus,
         # which should be -pre_fault_v / Z_bus[k,k]
         i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
@@ -170,7 +172,9 @@ class PowerSystem():
         fault_v_vector = np.matmul(self.z_bus, i_vector)
         for i in range(fault_v_vector.shape[0]):
             fault_v_vector[i] = pre_fault_v - cmath.polar(fault_v_vector[i])[0]
-        return np.real(i_fault), fault_v_vector.astype(float)
+        # Returned values are round to config.decimal_precision, since the 0 value was returning an exponential e^-16
+        # Thus, it likely makes more sense to just display this as 0
+        return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float), config.decimal_precision)
 
     def init_jacobian(self):
         """

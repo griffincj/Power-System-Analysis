@@ -1,4 +1,5 @@
 import cmath
+import re
 
 from transformer import Transformer
 from transmission_line import TransmissionLine
@@ -116,8 +117,17 @@ if __name__ == '__main__':
             user_bus_select = input(f"Please enter a bus in range ")
             while user_bus_select not in bus_list:
                 user_bus_select = input(f"Please enter a bus in range ")
+
+            user_voltage_select = input("Please enter a prefault voltage in per unit to be applied to all buses: ")
+            while True:
+                try:
+                    float(user_voltage_select)
+                    break
+                except ValueError:
+                    user_voltage_select = input("Please enter a prefault voltage in per unit to be applied to all buses: ")
+
             ps.calc_z_bus()
-            i_fault, v_fault_vector = ps.calc_fault(user_bus_select, 1.05)
+            i_fault, v_fault_vector = ps.calc_fault(user_bus_select, float(user_voltage_select))
             print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
             print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
         elif int(user_input) == 2:
