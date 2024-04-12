@@ -106,24 +106,25 @@ if __name__ == '__main__':
     ps.add_generator(gen_slack)
     ps.add_generator(gen_7)
 
-    user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
-    if int(user_input) == 1:
-        print("You selected FAULT")
-        bus_list = [bus.bus_name for bus in ps.buses]
-        print('Buses: ' + str(bus_list))
+    while (True):
+        user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
+        if int(user_input) == 1:
+            print("You selected FAULT")
+            bus_list = [bus.bus_name for bus in ps.buses]
+            print('Buses: ' + str(bus_list))
 
-        user_bus_select = input(f"Please enter a bus in range ")
-        while user_bus_select not in bus_list:
             user_bus_select = input(f"Please enter a bus in range ")
-        ps.calc_z_bus()
-        i_fault, v_fault_vector = ps.calc_fault(user_bus_select, 1.05)
-        print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
-        print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
-    elif int(user_input) == 2:
-        ps.calculate_y_bus()
-        print(ps.y_bus)
-        print(ps.z_bus)
-        ps.run_newton_raphson(iterations=5, tolerance=0.0001)
-        print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
-        print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
-        ps.calc_ampacity_exceptions()
+            while user_bus_select not in bus_list:
+                user_bus_select = input(f"Please enter a bus in range ")
+            ps.calc_z_bus()
+            i_fault, v_fault_vector = ps.calc_fault(user_bus_select, 1.05)
+            print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
+            print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
+        elif int(user_input) == 2:
+            ps.calculate_y_bus()
+            print(ps.y_bus)
+            print(ps.z_bus)
+            ps.run_newton_raphson(iterations=5, tolerance=0.0001)
+            print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
+            print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
+            ps.calc_ampacity_exceptions()
