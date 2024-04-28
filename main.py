@@ -72,13 +72,13 @@ if __name__ == '__main__':
     load_4 = Load(pu_power=(100 / config.power_base), pu_reactive_power=(70 / config.power_base), connected_bus=bus_4)
     load_5 = Load(pu_power=(100 / config.power_base), pu_reactive_power=(65 / config.power_base), connected_bus=bus_5)
     load_6 = Load(pu_power=(0 / config.power_base), pu_reactive_power=(0 / config.power_base), connected_bus=bus_6)
-    gen_7 = Generator(pu_power=(200 / config.power_base), pu_voltage=1.0, connected_bus=bus_7, pos_seq_x=0.12)
-    gen_slack = Generator(pu_power=(0/config.power_base), pu_voltage=1.0, connected_bus=bus_1, pos_seq_x=0.12)
+    gen_7 = Generator(pu_power=(200 / config.power_base), pu_voltage=1.0, connected_bus=bus_7, pos_seq_x=0.12, neg_seq_x=0.14, zero_seq_x=0.05, grounding=0)
+    gen_slack = Generator(pu_power=(0/config.power_base), pu_voltage=1.0, connected_bus=bus_1, pos_seq_x=0.12, neg_seq_x=0.14, zero_seq_x=0.05, grounding=1)
 
     # Transformer low-side, high-side is based on the buses connected on either side of it
-    t1 = Transformer(rating=125, bus_a=bus_1, bus_b=bus_2, z_pu=0.085, x_r_ratio=10)
+    t1 = Transformer(rating=125, bus_a=bus_1, bus_b=bus_2, z_pu=0.085, x_r_ratio=10, grounding=1)
     ps.add_transformer(t1)
-    t2 = Transformer(rating=200, bus_a=bus_6, bus_b=bus_7, z_pu=0.105, x_r_ratio=12)
+    t2 = Transformer(rating=200, bus_a=bus_6, bus_b=bus_7, z_pu=0.105, x_r_ratio=12, grounding=-1)
     ps.add_transformer(t2)
 
     # Initialize base conductor and bundle, used by each transmission line
@@ -107,6 +107,12 @@ if __name__ == '__main__':
     ps.add_generator(gen_slack)
     ps.add_generator(gen_7)
 
+    ps.calc_z_bus()
+    i_fault, v_fault_vector = ps.calc_unbalanced_fault('1', 1.0, 'L2L')
+    print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
+    print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
+
+    '''
     while (True):
         user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
         if int(user_input) == 1:
@@ -127,7 +133,7 @@ if __name__ == '__main__':
                     user_voltage_select = input("Please enter a prefault voltage in per unit to be applied to all buses: ")
 
             ps.calc_z_bus()
-            i_fault, v_fault_vector = ps.calc_fault(user_bus_select, float(user_voltage_select))
+            i_fault, v_fault_vector = ps.calc_balanced_fault(user_bus_select, float(user_voltage_select))
             print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
             print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
         elif int(user_input) == 2:
@@ -138,3 +144,4 @@ if __name__ == '__main__':
             print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
             print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
             ps.calc_ampacity_exceptions()
+    '''

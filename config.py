@@ -7,9 +7,11 @@ class Config:
     @property
     def power_base(self):
         return self._power_base
+
     @property
     def voltage_base(self):
         return self._voltage_base
+
     @property
     def decimal_precision(self):
         return self._decimal_precision

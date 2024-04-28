@@ -22,7 +22,12 @@ class PowerSystem():
         self.transmission_lines = []
         self.buses = []
         self.y_bus = np.zeros((1, 1))
-        self.z_bus = np.zeros((1, 1))
+        self.z_bus = np.zeros((1,1))
+
+        self.z_bus_pos = np.zeros((1, 1))
+        self.z_bus_neg = np.zeros((1, 1))
+        self.z_bus_zero = np.zeros((1, 1))
+
         self.y_magnitude = pd.DataFrame()
         self.y_theta = pd.DataFrame()
         self.j1 = pd.DataFrame((1, 1))
@@ -145,15 +150,37 @@ class PowerSystem():
         return self.y_bus
 
     def calc_z_bus(self):
-        self.calculate_y_bus()
-        # Add the positive sequence reactance for each generator
+        cur_y_bus = self.calculate_y_bus()
+        self.z_bus = np.linalg.inv(cur_y_bus)
+        pos_seq_y_bus = self.y_bus.copy()
+        neg_seq_y_bus = self.y_bus.copy()
+        zero_seq_y_bus = self.y_bus.copy()
+
+        # Add the POSITIVE sequence reactance for each generator
         for gen in self.generators:
             bus_id = gen.bus.id
-            self.y_bus[bus_id, bus_id] += (1/gen.pos_seq_x * 1j)
+            pos_seq_y_bus[bus_id, bus_id] += (1/gen.pos_seq_x * 1j)
         # Z_bus is the inverse of the updated Y_bus
-        self.z_bus = np.linalg.inv(self.y_bus)
+        self.z_bus_pos = np.linalg.inv(pos_seq_y_bus)
 
-    def calc_fault(self, selected_bus, pre_fault_v):
+        # Add the NEGATIVE sequence reactance for each generator
+        for gen in self.generators:
+            bus_id = gen.bus.id
+            neg_seq_y_bus[bus_id, bus_id] += (1/gen.neg_seq_x * 1j)
+        # Z_bus is the inverse of the updated Y_bus
+        self.z_bus_neg = np.linalg.inv(neg_seq_y_bus)
+
+        for gen in self.generators:
+            bus_id = gen.bus.id
+            # Check if element is grounded. If not, z-bus elem = 1/inf = 0
+            if(gen.zero_seq_x >= 0):
+                zero_seq_y_bus[bus_id, bus_id] += (1/((gen.zero_seq_x * 1j) + (3 * gen.grounding)))
+            else:
+                zero_seq_y_bus[bus_id, bus_id] = 0
+        # Z_bus is the inverse of the updated Y_bus
+        self.z_bus_zero = np.linalg.inv(zero_seq_y_bus)
+
+    def calc_balanced_fault(self, selected_bus, pre_fault_v):
         # Convert selected bus from bus name to bus ID
         bus_dict = {}
         for bus in self.buses:
@@ -166,15 +193,60 @@ class PowerSystem():
         # Current vector should be all zeros except for the faulted bus,
         # which should be -pre_fault_v / Z_bus[k,k]
         i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
-        i_fault = prefaut_v_complex/(self.z_bus[cur_bus.id, cur_bus.id])
+        i_fault = prefaut_v_complex/(self.z_bus_pos[cur_bus.id, cur_bus.id])
         i_vector[cur_bus.id] = -i_fault
 
-        fault_v_vector = np.matmul(self.z_bus, i_vector)
+        fault_v_vector = np.matmul(self.z_bus_pos, i_vector)
         for i in range(fault_v_vector.shape[0]):
             fault_v_vector[i] = pre_fault_v - cmath.polar(fault_v_vector[i])[0]
         # Returned values are round to config.decimal_precision, since the 0 value was returning an exponential e^-16
         # Thus, it likely makes more sense to just display this as 0
-        return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float), config.decimal_precision)
+        return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float),
+                                                                              config.decimal_precision)
+
+    def calc_unbalanced_fault(self, selected_bus, pre_fault_v, fault_type):
+        # FAULT TYPES:
+        # 1 = Single Line to Ground
+        # 2 = LINE TO LINE
+        # 3 = DOUBLE LINE TO GROUND
+        # Convert selected bus from bus name to bus ID
+        bus_dict = {}
+        for bus in self.buses:
+            bus_dict[bus.bus_name] = bus
+        cur_bus = bus_dict[selected_bus]
+
+        # We want to use the voltage phasor for calculations
+        prefaut_v_complex = cmath.rect(pre_fault_v, 0)
+
+        # Current vector should be all zeros except for the faulted bus,
+        # which should be -pre_fault_v / Z_bus[k,k]
+        i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
+
+        # SINGLE LINE TO GROUND
+        if fault_type == 1:
+            # Get bus impedance from "regular" z-bus, i.e. non-sequence from inverting the y-bus used for power flows
+            bus_impedance = self.z_bus[cur_bus.id, cur_bus.id]
+            sum = (self.z_bus_zero[cur_bus.id, cur_bus.id] + self.z_bus_neg[cur_bus.id, cur_bus.id]
+                   + self.z_bus_pos[cur_bus.id, cur_bus.id] + 3 * bus_impedance)
+            i_fault = prefaut_v_complex / sum
+            return i_fault
+        # LINE TO LINE
+        elif fault_type == 2:
+            bus_impedance = self.z_bus[cur_bus.id, cur_bus.id]
+            sum = self.z_bus_pos[cur_bus.id, cur_bus.id] + self.z_bus_neg[cur_bus.id, cur_bus.id] + bus_impedance
+            pos_i_fault = prefaut_v_complex / sum
+            return pos_i_fault
+        elif fault_type == 3:
+            return
+        i_vector[cur_bus.id] = -i_fault
+
+        fault_v_vector = np.matmul(self.z_bus_neg, i_vector)
+        for i in range(fault_v_vector.shape[0]):
+            fault_v_vector[i] = pre_fault_v - cmath.polar(fault_v_vector[i])[0]
+        # Returned values are round to config.decimal_precision, since the 0 value was returning an exponential e^-16
+        # Thus, it likely makes more sense to just display this as 0
+        return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float),
+                                                                              config.decimal_precision)
 
     def init_jacobian(self):
         """

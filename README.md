@@ -17,3 +17,5 @@ For milestone 4, ``main.py`` the user is now provided a choice to run either a p
 fault study. The power flow study is the same as milestone 3. The fault study allows the user to select a bus
 to add the fault to and the pre-fault voltage. The faulted bus's current and the vector of bus voltages is output
 from the program.
+
+STILL WORKING ON SEQUENCE NETWORKS!

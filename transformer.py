@@ -5,7 +5,7 @@ from bus import Bus
 
 
 class Transformer:
-    def __init__(self, rating, bus_a: Bus, bus_b: Bus, z_pu, x_r_ratio):
+    def __init__(self, rating, bus_a: Bus, bus_b: Bus, z_pu, x_r_ratio, grounding):
         self.rating = rating
         self.bus_a = bus_a
         self.bus_b = bus_b
@@ -18,6 +18,7 @@ class Transformer:
         self.calc_impedance_attrs()
         self.yt_pu = 1 / self.z_pu_sys
         self.sub_bus = self.calc_bus_admittance_matrix()
+        self.grounding = grounding
 
     def calc_impedance_attrs(self):
         self.z_pu_sys = self.z_pu * (config.power_base / self.rating)
@@ -41,6 +42,7 @@ class Transformer:
                 sub_bus[iterator.multi_index] = -1 * self.yt_pu
             iterator.iternext()
         return sub_bus
+
     '''
     def per_unit(self, base):
         z_pu_old = self.z_pu
