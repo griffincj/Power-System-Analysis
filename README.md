@@ -17,5 +17,5 @@ For milestone 4, ``main.py`` the user is now provided a choice to run either a p
 fault study. The power flow study is the same as milestone 3. The fault study allows the user to select a bus
 to add the fault to and the pre-fault voltage. The faulted bus's current and the vector of bus voltages is output
 from the program.
-
-STILL WORKING ON SEQUENCE NETWORKS!
+This includes the creation of the positive, negative, and zero sequence networks and the algorithm for calculating
+phase voltage and current for any type of fault (line to line, single line to ground, double line to ground, and symmetric)

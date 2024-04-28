@@ -107,12 +107,6 @@ if __name__ == '__main__':
     ps.add_generator(gen_slack)
     ps.add_generator(gen_7)
 
-    ps.calc_z_bus()
-    i_fault, v_fault_vector = ps.calc_unbalanced_fault('1', 1.0, 'L2L')
-    print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
-    print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
-
-    '''
     while (True):
         user_input = input("Please enter 1 for FAULT STUDY or 2 for FLOW STUDY:")
         if int(user_input) == 1:
@@ -132,8 +126,32 @@ if __name__ == '__main__':
                 except ValueError:
                     user_voltage_select = input("Please enter a prefault voltage in per unit to be applied to all buses: ")
 
-            ps.calc_z_bus()
-            i_fault, v_fault_vector = ps.calc_balanced_fault(user_bus_select, float(user_voltage_select))
+            user_symmetric_type_select = input("Please enter 1 for SYMMETRIC FAULT or 2 for ASYMMETRIC FAULT")
+            while int(user_symmetric_type_select) not in [1, 2]:
+                user_symmetric_type_select = input("Please enter 1 for SYMMETRIC FAULT or 2 for ASYMMETRIC FAULT")
+
+            if int(user_symmetric_type_select) == 1:
+                ps.calc_z_bus()
+                i_fault, v_fault_vector = ps.calc_balanced_fault(user_bus_select, float(user_voltage_select))
+            if int(user_symmetric_type_select) == 2:
+                ps.calc_z_bus()
+                user_fault_type_select = input(
+                    "Please enter\n1 for Single Line to Ground\n2 for Line to Line\n3 for Double Line to Ground")
+                while int(user_fault_type_select) not in [1, 2, 3]:
+                    user_fault_type_select = input(
+                        "Please enter\n1 for Single Line to Ground\n2 for Line to Line\n3 for Double Line to Ground")
+                if int(user_fault_type_select) == 1:
+                    i_fault, v_fault_vector = ps.calc_unbalanced_fault(user_bus_select,
+                                                                       float(user_voltage_select),
+                                                                       int(user_fault_type_select), 0)
+                elif int(user_fault_type_select) == 2:
+                    i_fault, v_fault_vector = ps.calc_unbalanced_fault(user_bus_select,
+                                                                       float(user_voltage_select),
+                                                                       int(user_fault_type_select), 0)
+                elif int(user_fault_type_select) == 3:
+                    i_fault, v_fault_vector = ps.calc_unbalanced_fault(user_bus_select,
+                                                                       float(user_voltage_select),
+                                                                       int(user_fault_type_select), 0)
             print('FAULTED BUS\'s CURRENT (P.U.): ' + str(i_fault))
             print('FAULTED SYSTEM VOLTAGES (P.U.):\n' + str(v_fault_vector))
         elif int(user_input) == 2:
@@ -144,4 +162,3 @@ if __name__ == '__main__':
             print("SYSTEM POWER LOSS (PU): " + str(ps.calc_power_loss()))
             print("SYSTEM REACTIVE POWER LOSS (PU): " + str(ps.calc_reactive_loss()))
             ps.calc_ampacity_exceptions()
-    '''

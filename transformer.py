@@ -43,13 +43,6 @@ class Transformer:
             iterator.iternext()
         return sub_bus
 
-    '''
-    def per_unit(self, base):
-        z_pu_old = self.z_pu
-        z_pu_sys = z_pu_old * (base / self.rating) * (self.low_side / self.low_side) ** 2
-        return z_pu_sys * 1j
-    '''
-
 if __name__ == '__main__':
     bus_1 = Bus(voltage_base=20, bus_name="1")
     bus_2 = Bus(voltage_base=230, bus_name="2")

@@ -192,6 +192,7 @@ class PowerSystem():
 
         # Current vector should be all zeros except for the faulted bus,
         # which should be -pre_fault_v / Z_bus[k,k]
+        # In2, and In0 are both = 0
         i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
         i_fault = prefaut_v_complex/(self.z_bus_pos[cur_bus.id, cur_bus.id])
         i_vector[cur_bus.id] = -i_fault
@@ -204,16 +205,20 @@ class PowerSystem():
         return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float),
                                                                               config.decimal_precision)
 
-    def calc_unbalanced_fault(self, selected_bus, pre_fault_v, fault_type):
+    def calc_unbalanced_fault(self, selected_bus, pre_fault_v, fault_type, fault_impedance: 0):
         # FAULT TYPES:
         # 1 = Single Line to Ground
         # 2 = LINE TO LINE
         # 3 = DOUBLE LINE TO GROUND
+        # Fault impedance defaulted to 0 (worst case, representing bolted fault i.e. no impedance to ground)
         # Convert selected bus from bus name to bus ID
         bus_dict = {}
         for bus in self.buses:
             bus_dict[bus.bus_name] = bus
         cur_bus = bus_dict[selected_bus]
+
+        a = np.exp(1j*2*np.pi/3)
+        A = np.array([(1,1,1), (1, a**2, a), (1, a, a**2)])
 
         # We want to use the voltage phasor for calculations
         prefaut_v_complex = cmath.rect(pre_fault_v, 0)
@@ -221,31 +226,46 @@ class PowerSystem():
         # Current vector should be all zeros except for the faulted bus,
         # which should be -pre_fault_v / Z_bus[k,k]
         i_vector = np.zeros(shape=(len(self.buses), 1), dtype=complex)
+        i_pos = 0
+        i_neg = 0
+        i_zero = 0
 
+        # Set the (N, N) matrix values to a variable for clarity/conciseness
+        z_zero = self.z_bus_zero[cur_bus.id, cur_bus.id]
+        z_pos = self.z_bus_pos[cur_bus.id, cur_bus.id]
+        z_neg = self.z_bus_neg[cur_bus.id, cur_bus.id]
         # SINGLE LINE TO GROUND
         if fault_type == 1:
-            # Get bus impedance from "regular" z-bus, i.e. non-sequence from inverting the y-bus used for power flows
-            bus_impedance = self.z_bus[cur_bus.id, cur_bus.id]
-            sum = (self.z_bus_zero[cur_bus.id, cur_bus.id] + self.z_bus_neg[cur_bus.id, cur_bus.id]
-                   + self.z_bus_pos[cur_bus.id, cur_bus.id] + 3 * bus_impedance)
-            i_fault = prefaut_v_complex / sum
-            return i_fault
+            i_pos = prefaut_v_complex / (z_zero + z_neg + z_pos + 3 * fault_impedance)
+            i_neg = prefaut_v_complex / (z_zero + z_neg + z_pos + 3 * fault_impedance)
+            i_zero = prefaut_v_complex / (z_zero + z_neg + z_pos + 3 * fault_impedance)
         # LINE TO LINE
         elif fault_type == 2:
-            bus_impedance = self.z_bus[cur_bus.id, cur_bus.id]
-            sum = self.z_bus_pos[cur_bus.id, cur_bus.id] + self.z_bus_neg[cur_bus.id, cur_bus.id] + bus_impedance
-            pos_i_fault = prefaut_v_complex / sum
-            return pos_i_fault
+            i_pos = prefaut_v_complex / (z_pos + z_neg + fault_impedance)
+            i_neg = -(prefaut_v_complex / (z_pos + z_neg + fault_impedance))
+            i_zero = 0
+        # DOUBLE LINE TO LINE
         elif fault_type == 3:
-            return
-        i_vector[cur_bus.id] = -i_fault
+            i_pos = prefaut_v_complex / (z_pos - ((z_neg * (z_zero + 3 * fault_impedance)) / (z_neg + z_zero + z_pos)))
+            i_neg = i_pos * -1 * ((z_zero + 3 * fault_impedance) / (z_zero + z_neg + 3 * fault_impedance))
+            i_zero = i_pos * -1 * (z_zero / (z_zero + z_neg + 3 * fault_impedance))
 
-        fault_v_vector = np.matmul(self.z_bus_neg, i_vector)
-        for i in range(fault_v_vector.shape[0]):
-            fault_v_vector[i] = pre_fault_v - cmath.polar(fault_v_vector[i])[0]
-        # Returned values are round to config.decimal_precision, since the 0 value was returning an exponential e^-16
-        # Thus, it likely makes more sense to just display this as 0
-        return np.round(np.real(i_fault), config.decimal_precision), np.round(fault_v_vector.astype(float),
+        # 3 x Number of bus matrix to keep track of all buses 3 voltages (i.e. to translate to phases)
+        bus_seq_voltages = np.zeros((3, len(self.buses)))
+        # Operand in equation from class notes
+        voltage_fault_vector = np.array([0, prefaut_v_complex, 0])
+        # Zero, positive, and negative sequence currents arranged into a vector
+        i_seq_vector = np.array([i_zero, i_pos, i_neg])
+        # Iterate over each bus to generate its sequence voltages
+        for k in range(len(self.buses)):
+            z_k_matrix = np.array([(self.z_bus_zero[k, k], 0, 0), (0, self.z_bus_pos[k, k], 0), (0, 0, self.z_bus_neg[k, k])])
+            bus_seq_voltages[:, k] = voltage_fault_vector - np.matmul(z_k_matrix, i_seq_vector)
+
+        # Convert both voltage and angle from sequence domain to phase domain by multiplying by "A" matrix defined
+        # in class
+        bus_phase_voltages = np.matmul(A, bus_seq_voltages)
+        bus_phase_currents = np.matmul(A, i_seq_vector)
+        return np.round(np.real(bus_phase_currents), config.decimal_precision), np.round(bus_phase_voltages.astype(float),
                                                                               config.decimal_precision)
 
     def init_jacobian(self):
